@@ -14,7 +14,12 @@ const Orders = () => {
     const fetchOrders = async () => {
         try {
             const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
-            const response = await axios.get(`${apiUrl}/api/orders`);
+            const userId = localStorage.getItem("user_id");
+            const role = localStorage.getItem("user_role");
+
+            const response = await axios.get(`${apiUrl}/api/orders`, {
+                params: { user_id: userId, role: role }
+            });
             setOrders(response.data);
             setLoading(false);
         } catch (error) {
@@ -148,22 +153,26 @@ const Orders = () => {
 
                                         {/* Actions */}
                                         <div style={{ display: "flex", gap: "10px" }}>
-                                            <button
-                                                onClick={() => deleteOrder(order.id)}
-                                                style={{
-                                                    padding: "8px 16px",
-                                                    backgroundColor: "#fee2e2",
-                                                    color: "#dc2626",
-                                                    border: "none",
-                                                    borderRadius: "8px",
-                                                    fontWeight: "600",
-                                                    cursor: "pointer"
-                                                }}
-                                            >
-                                                Hapus
-                                            </button>
-                                            {order.status === "Diproses" && (
-                                                <button onClick={() => updateStatus(order.id, "Dikirim")} style={{ padding: "8px 16px", backgroundColor: "#e0f2fe", color: "#0369a1", border: "none", borderRadius: "8px", fontWeight: "600", cursor: "pointer" }}>Kirim Barang</button>
+                                            {localStorage.getItem("user_role") === "admin" && (
+                                                <>
+                                                    <button
+                                                        onClick={() => deleteOrder(order.id)}
+                                                        style={{
+                                                            padding: "8px 16px",
+                                                            backgroundColor: "#fee2e2",
+                                                            color: "#dc2626",
+                                                            border: "none",
+                                                            borderRadius: "8px",
+                                                            fontWeight: "600",
+                                                            cursor: "pointer"
+                                                        }}
+                                                    >
+                                                        Hapus
+                                                    </button>
+                                                    {order.status === "Diproses" && (
+                                                        <button onClick={() => updateStatus(order.id, "Dikirim")} style={{ padding: "8px 16px", backgroundColor: "#e0f2fe", color: "#0369a1", border: "none", borderRadius: "8px", fontWeight: "600", cursor: "pointer" }}>Kirim Barang</button>
+                                                    )}
+                                                </>
                                             )}
                                             {order.status === "Dikirim" && (
                                                 <button onClick={() => updateStatus(order.id, "Selesai")} style={{ padding: "8px 16px", backgroundColor: "#dcfce7", color: "#15803d", border: "none", borderRadius: "8px", fontWeight: "600", cursor: "pointer" }}>Konfirmasi Sampai</button>

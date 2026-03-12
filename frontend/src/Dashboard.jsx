@@ -47,23 +47,25 @@ const Dashboard = () => {
       }}>
         <h2 style={{ color: "var(--primary-color)", margin: 0, fontWeight: "700" }}>Toko Gerabah 1</h2>
         <div style={{ display: "flex", gap: "15px" }}>
-          <button
-            onClick={() => navigate("/master")}
-            style={{
-              backgroundColor: "var(--success)",
-              color: "white",
-              padding: "12px 24px",
-              border: "none",
-              cursor: "pointer",
-              borderRadius: "12px",
-              fontWeight: "600",
-              transition: "transform 0.2s"
-            }}
-            onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
-            onMouseOut={(e) => e.target.style.transform = "scale(1)"}
-          >
-            Master Produk
-          </button>
+          {localStorage.getItem("user_role") === "admin" && (
+            <button
+              onClick={() => navigate("/master")}
+              style={{
+                backgroundColor: "var(--success)",
+                color: "white",
+                padding: "12px 24px",
+                border: "none",
+                cursor: "pointer",
+                borderRadius: "12px",
+                fontWeight: "600",
+                transition: "transform 0.2s"
+              }}
+              onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
+              onMouseOut={(e) => e.target.style.transform = "scale(1)"}
+            >
+              Master Produk
+            </button>
+          )}
           <button
             onClick={() => navigate("/orders")}
             style={{

@@ -58,7 +58,8 @@ const Checkout = () => {
             const payload = {
                 ...formData,
                 total_amount: totalAmount,
-                items: cartItems
+                items: cartItems,
+                user_id: localStorage.getItem("user_id")
             };
 
             await axios.post(`${apiUrl}/api/orders`, payload);

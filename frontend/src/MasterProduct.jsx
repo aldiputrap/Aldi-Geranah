@@ -9,8 +9,13 @@ const MasterProduct = () => {
     const nameInputRef = useRef(null);
 
     useEffect(() => {
+        const role = localStorage.getItem("user_role");
+        if (role !== "admin") {
+            navigate("/dashboard");
+            return;
+        }
         fetchProducts();
-    }, []);
+    }, [navigate]);
 
     const fetchProducts = async () => {
         try {

@@ -16,6 +16,9 @@ function Login() {
         password,
       });
       localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user_id", response.data.user.id);
+      localStorage.setItem("user_username", response.data.user.username);
+      localStorage.setItem("user_role", response.data.user.role);
       alert("Login Berhasil!");
       navigate("/dashboard");
     } catch (error) {

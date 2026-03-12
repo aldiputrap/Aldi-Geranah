@@ -14,9 +14,14 @@ const initDb = async () => {
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         username VARCHAR(100) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL
+        password VARCHAR(255) NOT NULL,
+        role VARCHAR(20) DEFAULT 'user'
       );
     `);
+
+    // Add role column if it doesn't exist
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user';`);
+
     await pool.query(`
       CREATE TABLE IF NOT EXISTS products (
       id SERIAL PRIMARY KEY,
@@ -43,12 +48,14 @@ const initDb = async () => {
         total_amount VARCHAR(100) NOT NULL,
         items JSONB,
         status VARCHAR(50) DEFAULT 'Diproses',
+        user_id INTEGER,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
-    // Add status column if it doesn't exist
+    // Add status and user_id columns if they don't exist
     await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Diproses';`);
+    await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id INTEGER;`);
 
     console.log("Database tables initialized.");
   } catch (err) {
@@ -97,8 +104,13 @@ app.post("/auth/login", async (req, res) => {
       [username, password]
     );
     if (result.rows.length > 0) {
-      const token = jwt.sign({ id: result.rows[0].id }, "RAHASIA", { expiresIn: "1h" });
-      res.json({ message: "Login Berhasil", token });
+      const user = result.rows[0];
+      const token = jwt.sign({ id: user.id, role: user.role }, "RAHASIA", { expiresIn: "1h" });
+      res.json({
+        message: "Login Berhasil",
+        token,
+        user: { id: user.id, username: user.username, role: user.role }
+      });
     } else {
       res.status(401).json({ message: "Username atau Password Salah" });
     }
@@ -182,11 +194,11 @@ app.delete("/api/products/:id", async (req, res) => {
 // --- ORDER HANDLING ---
 app.post("/api/orders", async (req, res) => {
   console.log("Incoming order request:", req.body);
-  const { customer_name, address, phone, total_amount, items } = req.body;
+  const { customer_name, address, phone, total_amount, items, user_id } = req.body;
   try {
     const result = await pool.query(
-      "INSERT INTO orders (customer_name, address, phone, total_amount, items) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-      [customer_name, address, phone, total_amount, JSON.stringify(items)]
+      "INSERT INTO orders (customer_name, address, phone, total_amount, items, user_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+      [customer_name, address, phone, total_amount, JSON.stringify(items), user_id]
     );
     res.status(201).json({ message: "Pesanan berhasil dibuat!", order: result.rows[0] });
   } catch (err) {
@@ -195,10 +207,20 @@ app.post("/api/orders", async (req, res) => {
   }
 });
 
-// GET All Orders
+// GET Orders (Filtered by Role)
 app.get("/api/orders", async (req, res) => {
+  const { user_id, role } = req.query;
   try {
-    const result = await pool.query("SELECT * FROM orders ORDER BY id DESC");
+    let query = "SELECT * FROM orders";
+    let params = [];
+
+    if (role !== "admin" && user_id) {
+      query += " WHERE user_id = $1";
+      params.push(user_id);
+    }
+
+    query += " ORDER BY id DESC";
+    const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });

@@ -195,15 +195,43 @@ app.delete("/api/products/:id", async (req, res) => {
 app.post("/api/orders", async (req, res) => {
   console.log("Incoming order request:", req.body);
   const { customer_name, address, phone, total_amount, items, user_id } = req.body;
+  const client = await pool.connect();
+
   try {
-    const result = await pool.query(
+    await client.query("BEGIN");
+
+    // Prosses setiap item untuk cek stok dan potong stok
+    for (const item of items) {
+      // Ambil stok terbaru produk
+      const productRes = await client.query("SELECT stok, name FROM products WHERE id = $1 FOR UPDATE", [item.id]);
+
+      if (productRes.rows.length === 0) {
+        throw new Error(`Produk dengan ID ${item.id} tidak ditemukan.`);
+      }
+
+      const currentStok = productRes.rows[0].stok;
+      if (currentStok < item.quantity) {
+        throw new Error(`Stok tidak mencukupi untuk "${productRes.rows[0].name}". Tersedia: ${currentStok}, Diminta: ${item.quantity}`);
+      }
+
+      // Kurangi stok
+      await client.query("UPDATE products SET stok = stok - $1 WHERE id = $2", [item.quantity, item.id]);
+    }
+
+    // Buat record pesanan
+    const result = await client.query(
       "INSERT INTO orders (customer_name, address, phone, total_amount, items, user_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
       [customer_name, address, phone, total_amount, JSON.stringify(items), user_id]
     );
+
+    await client.query("COMMIT");
     res.status(201).json({ message: "Pesanan berhasil dibuat!", order: result.rows[0] });
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error("Order error:", err.message);
-    res.status(500).json({ error: err.message });
+    res.status(400).json({ error: err.message });
+  } finally {
+    client.release();
   }
 });
 

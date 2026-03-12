@@ -23,7 +23,7 @@ function Register() {
     <div className="auth-container">
       <div className="auth-card">
         <h2 className="auth-title">Buat Akun Baru 🚀</h2>
-        <p className="auth-subtitle">Daftar untuk mulai mengatur produk Anda.</p>
+        <p className="auth-subtitle">Daftar untuk mulai berbelanja produk berkualitas.</p>
 
         <form onSubmit={handleRegister}>
           <div className="input-group">

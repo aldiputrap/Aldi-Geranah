@@ -26,6 +26,9 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("user_username");
+    localStorage.removeItem("user_role");
     alert("Logout Berhasil!");
     navigate("/login");
   };

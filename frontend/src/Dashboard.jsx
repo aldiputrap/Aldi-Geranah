@@ -45,7 +45,7 @@ const Dashboard = () => {
         maxWidth: "1200px",
         margin: "0 auto 40px"
       }}>
-        <h2 style={{ color: "var(--primary-color)", margin: 0, fontWeight: "700" }}>Toko Gerabah 🚀</h2>
+        <h2 style={{ color: "var(--primary-color)", margin: 0, fontWeight: "700" }}>Toko Gerabah 1</h2>
         <div style={{ display: "flex", gap: "15px" }}>
           <button
             onClick={() => navigate("/master")}
